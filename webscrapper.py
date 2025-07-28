@@ -24,90 +24,56 @@ import time
 
 
 def web_scrapper(web_url, f_name):
-   
-   # greetings
-   print('Thank you for sharing url and file name!\nReading the content!')
+    print('Thank you for sharing url and file name!\nReading the content!')
+    time.sleep(2)
 
-   #processing
-   time.sleep(5)
+    header = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'
+    }
 
+    try:
+        response = requests.get(web_url, headers=header)
+    except Exception as e:
+        print(f"Error connecting to website: {e}")
+        return
 
-   header = {'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'}
+    if response.status_code == 200:
+        print('Connected to the Website!')
+        html_content = response.text
 
+        soup = BeautifulSoup(html_content, 'lxml')
+        hotel_divs = soup.find_all('div', role='listitem')
 
-   response = requests.get(web_url, headers= header)
+        with open(f'{f_name}.csv', 'w', encoding='utf-8', newline='') as file_csv:
+            writer = csv.writer(file_csv)
+            writer.writerow(['hotel_name', 'locality', 'price', 'rating', 'score', 'review', 'link'])
 
+            for hotel in hotel_divs:
+                # Safely extract each field
+                hotel_name = hotel.find('div', class_="b87c397a13 a3e0b4ffd1")
+                hotel_name = hotel_name.text.strip() if hotel_name else 'NA'
 
-   if response.status_code == 200:
-   
-    print('Connected to the Website!')
-    html_content = response.text
+                location = hotel.find('span', class_="d823fbbeed f9b3563dd4")
+                location = location.text.strip() if location else 'NA'
 
-    
-    # creating soup
-    soup = BeautifulSoup(html_content, 'lxml')
+                price = hotel.find('span', class_="b87c397a13 f2f358d1de ab607752a2")
+                price = price.text.strip().replace('ZARÂ', 'R') if price else 'NA'
 
-    #print(soup.prettify())
+                rating = hotel.find('div', class_="f63b14ab7a f546354b44 becbee2f63")
+                rating = rating.text.strip() if rating else 'NA'
 
-    #main container
-    hotel_divs = soup.find_all('div', role='listitem')
+                score = hotel.find('div', class_="f63b14ab7a dff2e52086")
+                score = score.text.strip() if score else 'NA'
 
-    with open(f'{f_name}.csv', 'w', encoding='utf-8') as file_csv:
-        writer = csv.writer(file_csv)
+                review = hotel.find('div', class_="fff1944c52 fb14de7f14 eaa8455879")
+                review = review.text.strip() if review else 'NA'
 
-        # adding header
-        writer.writerow(['hotel_name', 'locality', 'price', 'rating', 'score', 'review', 'link'])
+                link_tag = hotel.find('a', href=True)
+                link = link_tag['href'] if link_tag else 'NA'
 
-        for hotel in hotel_divs:
-            hotel_name = hotel.find('div', class_="b87c397a13 a3e0b4ffd1").text.strip()
-            hotel_name if hotel_name else 'NA'
-
-            location = hotel.find('span', class_="d823fbbeed f9b3563dd4").text.strip()
-            location if location else 'NA'
-
-                # price
-            price = hotel.find('span', class_="b87c397a13 f2f358d1de ab607752a2").text.strip().replace('ZARÂ', '')
-            if price: 
-                price
-            else:
-                'NA'
-                
-
-            rating = hotel.find('div', class_="f63b14ab7a f546354b44 becbee2f63").text.strip()
-            rating if rating else 'NA'
-
-            score = hotel.find('div', class_="f63b14ab7a dff2e52086").text.strip()
-            score if score else 'NA'
-
-            review = hotel.find('div', class_="fff1944c52 fb14de7f14 eaa8455879").text.strip()
-            review if review else 'NA'
-
-                # getting the link
-            link = hotel.find('a', href=True).get('href')
-            link if link else 'NA'
-                
-
-                # saving the file into csv
-            writer.writerow([hotel_name, location, price, rating, score, review, link])
-
-
-        #print(hotel_name)
-        #print(location)
-        #print(price)
-        #print(rating)
-        #print(score)
-        #print(review)
-        #print(link)
-        #print('')
-
-
-
-
-
-   else:
-    print(f'Connection failed{response.status_code}')
-
-
+                writer.writerow([hotel_name, location, price, rating, score, review, link])
+    else:
+        print(f'Connection failed: {response.status_code}')
 
 # if using this script then below task will be executed
 if __name__ == '__main__':
