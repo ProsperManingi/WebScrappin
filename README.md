@@ -1,4 +1,3 @@
-# WebScrapping
 
 # 🏨 Booking.com Hotel Web Scraper (Python Project)
 
